@@ -60,15 +60,25 @@ runs:
           echo -e "\033[0;33mNorminette exited with code $status but only contains notices (warnings)\033[0m"
         fi
 
-    - name: Clear Vogsphere branch due to Norminette failure
-      if: ${{ inputs.normcheck == 'true' && failure() }}
+    - name: Compile with make
+      shell: bash
+      run: |
+        echo "Compiling project with make..."
+        if ! make; then
+          echo -e "\033[0;31mCompilation failed! Fix your code before pushing to Vogsphere.\033[0m"
+          exit 1
+        fi
+        echo -e "\033[0;32mCompilation successful!\033[0m"
+
+    - name: Clear Vogsphere branch due to failure
+      if: failure()
       shell: bash
       run: |
         git config user.name "github-actions[bot]" >/dev/null 2>&1
         git config user.email "github-actions[bot]@users.noreply.github.com" >/dev/null 2>&1
         git checkout --orphan vogsphere >/dev/null 2>&1
         git reset >/dev/null 2>&1
-        git commit --allow-empty -m "NORMINETTE FAILED - BRANCH CLEARED" >/dev/null 2>&1
+        git commit --allow-empty -m "VOGSPHERE ACTION FAILED - BRANCH CLEARED" >/dev/null 2>&1
         git push origin vogsphere --force >/dev/null 2>&1
         exit 1
 
